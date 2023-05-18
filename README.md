@@ -1,7 +1,7 @@
 # streamlit_sample
 
 ### 👍기간: 2023. 05. 15~ 2023. 05. 17
-
+![](https://github.com/YeonjiKim0316/streamlit_sample/blob/main/%ED%99%94%EB%A9%B4%20%EC%BA%A1%EC%B2%98%202023-04-24%20164817.png)
 # EDA
 
 # 탐색적 데이터 분석 EDA
