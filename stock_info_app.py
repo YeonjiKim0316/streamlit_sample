@@ -8,7 +8,7 @@ from io import BytesIO
 import plotly.graph_objects as go
 import pandas as pd
 
-st.write('제목')
+st.write('제목입니다')
 
 def get_stock_info():
     base_url =  "http://kind.krx.co.kr/corpgeneral/corpList.do"    
