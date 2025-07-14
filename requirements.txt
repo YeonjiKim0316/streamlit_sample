@@ -6,3 +6,4 @@ openpyxl
 plotly
 beautifulsoup4
 html5lib
+koreanize-matplotlib
