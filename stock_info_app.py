@@ -8,6 +8,8 @@ import streamlit as st
 import pandas as pd
 import FinanceDataReader as fdr
 import plotly.graph_objects as go
+import matplotlib.pyplot as plt
+import matplotlib 
 
 
 # 캐싱: 인자가 바뀌지 않는 함수 실행 결과를 저장 후 재사용
