@@ -82,14 +82,14 @@ if confirm_btn:
         #                 close=price_df['Close'])])
         # st.plotly_chart(fig, use_container_width=True)
         # 선 그래프 그리기 - matplotlib
-    ax = df['Close'].plot(grid=True, figsize=(15, 5))
-    ax.set_title("주가(종가) 그래프", fontsize=30) # 그래프 제목을 지정
-    ax.set_xlabel("기간", fontsize=20)             # x축 라벨을 지정
-    ax.set_ylabel("주가(원)", fontsize=20)         # y축 라벨을 지정
-    plt.xticks(fontsize=15)                        # X축 눈금값의 폰트 크기 지정
-    plt.yticks(fontsize=15)                        # Y축 눈금값의 폰트 크기 지정    
-    fig = ax.get_figure()                          # fig 객체 가져오기    
-    st.pyplot(fig)        
+        ax = df['Close'].plot(grid=True, figsize=(15, 5))
+        ax.set_title("주가(종가) 그래프", fontsize=30) # 그래프 제목을 지정
+        ax.set_xlabel("기간", fontsize=20)             # x축 라벨을 지정
+        ax.set_ylabel("주가(원)", fontsize=20)         # y축 라벨을 지정
+        plt.xticks(fontsize=15)                        # X축 눈금값의 폰트 크기 지정
+        plt.yticks(fontsize=15)                        # Y축 눈금값의 폰트 크기 지정    
+        fig = ax.get_figure()                          # fig 객체 가져오기    
+        st.pyplot(fig)        
 
         excel_data = BytesIO()
         price_df.to_excel(excel_data)
