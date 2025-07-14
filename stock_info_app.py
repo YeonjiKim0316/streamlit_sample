@@ -40,9 +40,6 @@ def get_stock_code_by_company(company_name: str) -> str:
         raise ValueError(f"'{company_name}'에 해당하는 종목코드를 찾을 수 없습니다.")
 
 
-
-
-
 def sidebar_inputs() -> tuple[str, tuple[datetime.date, datetime.date], bool]:
     """
     Streamlit 사이드바에 회사명 입력창, 날짜 선택 위젯, 확인 버튼을 생성하고 입력값을 반환합니다.
@@ -66,8 +63,8 @@ def sidebar_inputs() -> tuple[str, tuple[datetime.date, datetime.date], bool]:
     return company_name, selected_dates, confirm_btn
 
 
-
 company_name, selected_dates, confirm_btn = sidebar_inputs()
+
 if confirm_btn:
     try:
         stock_code = get_stock_code_by_company(company_name)
@@ -78,12 +75,21 @@ if confirm_btn:
         st.subheader(f"[{company_name}] 주가 데이터")
         st.dataframe(price_df.tail(7))
 
-        fig = go.Figure(data=[go.Candlestick(x=price_df.index,
-                        open=price_df['Open'],
-                        high=price_df['High'],
-                        low=price_df['Low'],
-                        close=price_df['Close'])])
-        st.plotly_chart(fig, use_container_width=True)
+        # fig = go.Figure(data=[go.Candlestick(x=price_df.index,
+        #                 open=price_df['Open'],
+        #                 high=price_df['High'],
+        #                 low=price_df['Low'],
+        #                 close=price_df['Close'])])
+        # st.plotly_chart(fig, use_container_width=True)
+        # 선 그래프 그리기 - matplotlib
+    ax = df['Close'].plot(grid=True, figsize=(15, 5))
+    ax.set_title("주가(종가) 그래프", fontsize=30) # 그래프 제목을 지정
+    ax.set_xlabel("기간", fontsize=20)             # x축 라벨을 지정
+    ax.set_ylabel("주가(원)", fontsize=20)         # y축 라벨을 지정
+    plt.xticks(fontsize=15)                        # X축 눈금값의 폰트 크기 지정
+    plt.yticks(fontsize=15)                        # Y축 눈금값의 폰트 크기 지정    
+    fig = ax.get_figure()                          # fig 객체 가져오기    
+    st.pyplot(fig)        
 
         excel_data = BytesIO()
         price_df.to_excel(excel_data)
