@@ -1,103 +1,78 @@
-
-# 표준 라이브러리
 import datetime
 from io import BytesIO
-
-# 서드파티 라이브러리
 import streamlit as st
 import pandas as pd
 import FinanceDataReader as fdr
-import plotly.graph_objects as go
 import matplotlib.pyplot as plt
-import matplotlib 
 import koreanize_matplotlib
 
-
-# 캐싱: 인자가 바뀌지 않는 함수 실행 결과를 저장 후 재사용
 @st.cache_data
 def get_krx_company_list() -> pd.DataFrame:
-    """
-    KRX(한국거래소) 상장 기업의 회사명과 종목코드 정보를 DataFrame으로 반환합니다.
-
-    Returns:
-        pd.DataFrame: '회사명', '종목코드' 컬럼을 가진 DataFrame
-    """
-    krx_df = fdr.StockListing('KRX')
-    company_df = krx_df[['Name', 'Code']].rename(columns={'Name': '회사명', 'Code': '종목코드'})
-    return company_df
-
+    try:
+        url = 'http://kind.krx.co.kr/corpgeneral/corpList.do?method=download&searchType=13'
+        df_listing = pd.read_html(url, header=0, flavor='bs4', encoding='EUC-KR')[0]
+        
+        # 필요한 컬럼만 추출 및 종목코드 6자리 포맷 맞추기
+        df_listing = df_listing[['회사명', '종목코드']].copy()
+        df_listing['종목코드'] = df_listing['종목코드'].apply(lambda x: f'{x:06}')
+        return df_listing
+    except Exception as e:
+        st.error(f"상장사 명단을 불러오는 데 실패했습니다: {e}")
+        return pd.DataFrame(columns=['회사명', '종목코드'])
 
 def get_stock_code_by_company(company_name: str) -> str:
-    """
-    회사명을 입력받아 해당 회사의 종목코드를 반환합니다.
-    Args:
-        company_name (str): 조회할 회사명
-    Returns:
-        str: 종목코드. 입력된 회사명이 없으면 ValueError 발생
-    """
+    # 만약 입력값이 숫자 6자리라면 그대로 반환
+    if company_name.isdigit() and len(company_name) == 6:
+        return company_name
+    
     company_df = get_krx_company_list()
     codes = company_df[company_df['회사명'] == company_name]['종목코드'].values
     if len(codes) > 0:
         return codes[0]
     else:
-        raise ValueError(f"'{company_name}'에 해당하는 종목코드를 찾을 수 없습니다.")
+        raise ValueError(f"'{company_name}'을 찾을 수 없습니다. 종목코드 6자리를 직접 입력해보세요.")
 
+# --- 사이드바 설정 ---
+st.sidebar.header("📈 주가 데이터 조회")
+company_name = st.sidebar.text_input('회사명 또는 종목코드:')
+today = datetime.datetime.now()
+selected_dates = st.sidebar.date_input("조회 기간", (datetime.date(today.year, 1, 1), today))
+confirm_btn = st.sidebar.button('조회하기')
 
-def sidebar_inputs() -> tuple[str, tuple[datetime.date, datetime.date], bool]:
-    """
-    Streamlit 사이드바에 회사명 입력창, 날짜 선택 위젯, 확인 버튼을 생성하고 입력값을 반환합니다.
-
-    Returns:
-        tuple: (회사명(str), (시작일, 종료일)(tuple of date), 확인버튼 클릭여부(bool))
-    """
-    company_name = st.sidebar.text_input('회사 이름을 입력하세요: ')
-    today = datetime.datetime.now()
-    this_year = today.year
-    jan_1 = datetime.date(this_year, 1, 1)
-    selected_dates = st.sidebar.date_input(
-        "시작일과 종료일을 입력하세요",
-        (jan_1, today),
-        None,
-        today,
-        format="MM.DD.YYYY",
-    )
-    st.sidebar.write(selected_dates)
-    confirm_btn = st.sidebar.button('확인')
-    return company_name, selected_dates, confirm_btn
-
-
-company_name, selected_dates, confirm_btn = sidebar_inputs()
-
+# --- 메인 로직 ---
 if confirm_btn:
-    try:
-        stock_code = get_stock_code_by_company(company_name)
-        start_date = selected_dates[0].strftime(r"%Y-%m-%d")
-        end_date = (selected_dates[1] + datetime.timedelta(days=1)).strftime(r"%Y-%m-%d")
-        price_df = fdr.DataReader(f'{stock_code}', start_date, end_date)
-        price_df.index = price_df.index.date
-        st.subheader(f"[{company_name}] 주가 데이터")
-        st.dataframe(price_df.tail(7))
+    if not company_name:
+        st.warning("조회할 회사 이름을 입력하세요.")
+    else:
+        try:
+            with st.spinner('데이터를 수집하는 중...'):
+                stock_code = get_stock_code_by_company(company_name)
+                start_date = selected_dates[0].strftime("%Y%m%d")
+                end_date = selected_dates[1].strftime("%Y%m%d")
+                
+                price_df = fdr.DataReader(stock_code, start_date, end_date)
+                
+            if price_df.empty:
+                st.info("해당 기간의 주가 데이터가 없습니다.")
+            else:
+                st.subheader(f"[{company_name}] 주가 데이터")
+                st.dataframe(price_df.tail(10), width=True)
 
-        # fig = go.Figure(data=[go.Candlestick(x=price_df.index,
-        #                 open=price_df['Open'],
-        #                 high=price_df['High'],
-        #                 low=price_df['Low'],
-        #                 close=price_df['Close'])])
-        # st.plotly_chart(fig, use_container_width=True)
-        # 선 그래프 그리기 - matplotlib
-        ax = price_df['Close'].plot(grid=True, figsize=(15, 5))
-        ax.set_title("주가(종가) 그래프", fontsize=30) # 그래프 제목을 지정
-        ax.set_xlabel("기간", fontsize=20)             # x축 라벨을 지정
-        ax.set_ylabel("주가(원)", fontsize=20)         # y축 라벨을 지정
-        plt.xticks(fontsize=15)                        # X축 눈금값의 폰트 크기 지정
-        plt.yticks(fontsize=15)                        # Y축 눈금값의 폰트 크기 지정    
-        fig = ax.get_figure()                          # fig 객체 가져오기    
-        st.pyplot(fig)        
+                # Matplotlib 시각화
+                fig, ax = plt.subplots(figsize=(12, 5))
+                price_df['Close'].plot(ax=ax, grid=True, color='red')
+                ax.set_title(f"{company_name} 종가 추이", fontsize=15)
+                st.pyplot(fig)
 
-        excel_data = BytesIO()
-        price_df.to_excel(excel_data)
-        st.download_button("엑셀 파일 다운로드", excel_data, file_name='stock_data.xlsx')
-    except ValueError as ve:
-        st.error(str(ve))
-    except Exception as e:
-        st.error(f"알 수 없는 오류가 발생했습니다: {e}")
+                # 엑셀 다운로드 기능
+                output = BytesIO()
+                with pd.ExcelWriter(output, engine='openpyxl') as writer:
+                    price_df.to_excel(writer, index=True, sheet_name='Sheet1')
+                st.download_button(
+                    label="📥 엑셀 파일 다운로드",
+                    data=output.getvalue(),
+                    file_name=f"{company_name}_주가.xlsx",
+                    mime="application/vnd.ms-excel"
+                )
+        except Exception as e:
+            st.error(f"오류가 발생했습니다: {e}")
