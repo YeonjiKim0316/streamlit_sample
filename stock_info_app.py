@@ -56,7 +56,7 @@ if confirm_btn:
                 st.info("해당 기간의 주가 데이터가 없습니다.")
             else:
                 st.subheader(f"[{company_name}] 주가 데이터")
-                st.dataframe(price_df.tail(10), width=True)
+                st.dataframe(price_df.tail(10), width="stretch")
 
                 # Matplotlib 시각화
                 fig, ax = plt.subplots(figsize=(12, 5))
