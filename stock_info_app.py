@@ -73,7 +73,7 @@ if confirm_btn:
         stock_code = get_stock_code_by_company(company_name)
         start_date = selected_dates[0].strftime(r"%Y-%m-%d")
         end_date = (selected_dates[1] + datetime.timedelta(days=1)).strftime(r"%Y-%m-%d")
-        price_df = fdr.DataReader(f'KRX:{stock_code}', start_date, end_date)
+        price_df = fdr.DataReader(f'{stock_code}', start_date, end_date)
         price_df.index = price_df.index.date
         st.subheader(f"[{company_name}] 주가 데이터")
         st.dataframe(price_df.tail(7))
