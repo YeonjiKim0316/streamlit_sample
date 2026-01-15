@@ -76,4 +76,5 @@ if confirm_btn:
                     mime="application/vnd.ms-excel"
                 )
         except Exception as e:
+
             st.error(f"오류가 발생했습니다: {e}")
