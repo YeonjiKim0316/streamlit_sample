@@ -6,7 +6,7 @@ import FinanceDataReader as fdr
 import matplotlib.pyplot as plt
 import koreanize_matplotlib
 
-
+# remote에서 변경 3
 @st.cache_data
 def get_krx_company_list() -> pd.DataFrame:
     try:
@@ -78,3 +78,4 @@ if confirm_btn:
         except Exception as e:
 
             st.error(f"오류가 발생했습니다: {e}")
+
