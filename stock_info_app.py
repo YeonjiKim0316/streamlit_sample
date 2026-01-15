@@ -6,7 +6,7 @@ import FinanceDataReader as fdr
 import matplotlib.pyplot as plt
 import koreanize_matplotlib
 
-# local에서 변경
+# local에서 변경 2
 @st.cache_data
 def get_krx_company_list() -> pd.DataFrame:
     try:
